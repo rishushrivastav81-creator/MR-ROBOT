@@ -1,0 +1,6 @@
+{
+  "name": "To Mr. Robot",
+  "description": "A personal response and interactive digital letter from Ishu to Nachiket.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
