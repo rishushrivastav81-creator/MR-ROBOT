@@ -977,25 +977,21 @@ def show_question():
     total = len(MATTER_CARDS)
     card = MATTER_CARDS[card_idx]
 
-    butterfly_html = '<div class="butterfly-icon">🦋</div>' if "🦋" in card["question"] else ''
+    butterfly_html = '<div class="butterfly-icon">🦋</div>' if "🦋" in card["question"] else ""
+    question_html = html.escape(card["question"])
+    supporting_html = html.escape(card["supporting"]).replace("\n", "<br>")
 
-    st.markdown(
-        f"""
-        <div class="glass-container">
-            <div class="meta-badge">
-                <span>What Matters To Me</span>
-                <span>Card {card_idx + 1:02d} / {total:02d}</span>
-            </div>
-            {butterfly_html}
-            <h2 class="romantic-heading" style="font-size: 2.1rem;">{card["question"]}</h2>
-            <div class="glow-divider"></div>
-            <div class="letter-text">
-{card["supporting"]}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    card_html = f"""<div class="glass-container">
+<div class="meta-badge">
+<span>What Matters To Me</span>
+<span>Card {card_idx + 1:02d} / {total:02d}</span>
+</div>
+{butterfly_html}
+<h2 class="romantic-heading" style="font-size: 2.1rem;">{question_html}</h2>
+<div class="glow-divider"></div>
+<div class="letter-text">{supporting_html}</div>
+</div>"""
+    st.markdown(card_html, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
