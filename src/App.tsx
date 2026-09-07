@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { ScreenType, AnswersMap } from './types';
 import { APP_INFO, SCREENS, MATTER_CARDS } from './data/storyData';
-import { APP_PY_CONTENT, REQUIREMENTS_CONTENT, README_CONTENT } from './data/sourceFiles';
 import { BackgroundCanvas } from './components/BackgroundCanvas';
 import { MusicPlayer } from './components/MusicPlayer';
 import { StoryCard } from './components/StoryCard';
@@ -11,8 +10,10 @@ import { ExactMomentCard } from './components/ExactMomentCard';
 import { FinalScreen } from './components/FinalScreen';
 import { FloatingRomanticDoodles } from './components/CuteDoodles';
 import { ConfessionLogModal } from './components/ConfessionLogModal';
+import { ShareQrModal } from './components/ShareQrModal';
 import { StreamlitCodeModal } from './components/StreamlitCodeModal';
-import { Heart, FileText } from 'lucide-react';
+import { APP_PY_CONTENT, REQUIREMENTS_CONTENT, README_CONTENT } from './data/sourceFiles';
+import { Heart, FileText, QrCode } from 'lucide-react';
 import { saveConfessionLog, loadConfessionLog } from './utils/confessionLogger';
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
   const [answers, setAnswers] = useState<AnswersMap>({});
   const [savedMoment, setSavedMoment] = useState<string>('');
   const [isLogModalOpen, setIsLogModalOpen] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   // Restore saved confession answers and moment from local storage on mount
   useEffect(() => {
@@ -126,6 +128,19 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Share & QR Code Button */}
+          <button
+            id="open-share-qr-btn"
+            onClick={() => setIsShareModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pink-600/25 hover:bg-pink-600/40 border border-pink-500/40 text-pink-200 hover:text-white transition-all text-xs font-mono shadow-[0_0_12px_rgba(244,63,94,0.2)]"
+            title="Share Letter & QR Code"
+            aria-label="Share Letter and QR Code"
+          >
+            <QrCode className="w-3.5 h-3.5 text-pink-400" />
+            <span className="hidden sm:inline">Share & QR</span>
+            <span className="sm:hidden">Share</span>
+          </button>
+
           {/* Confession Log & Answers File Button */}
           <button
             id="open-confession-log-btn"
@@ -316,6 +331,7 @@ export default function App() {
               answers={answers}
               savedMoment={savedMoment}
               onOpenLogModal={() => setIsLogModalOpen(true)}
+              onOpenShareModal={() => setIsShareModalOpen(true)}
             />
           )}
         </AnimatePresence>
@@ -355,7 +371,13 @@ export default function App() {
         exactMoment={savedMoment}
       />
 
-      {/* Code Export Modal for Streamlit Community Cloud (app.py) */}
+      {/* Share Link & QR Code Modal with GitHub Pages Guide */}
+      <ShareQrModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+      />
+
+      {/* Streamlit Source Code & Log Persistence Modal */}
       <StreamlitCodeModal
         appPyContent={APP_PY_CONTENT}
         requirementsContent={REQUIREMENTS_CONTENT}

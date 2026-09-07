@@ -89,3 +89,27 @@ export const downloadFile = (filename: string, content: string, mimeType: string
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+export const generateWhatsAppUrl = (answers: AnswersMap, exactMoment: string): string => {
+  const lines: string[] = [
+    '💌 *To Ishu — My Answers & Confession* 💌',
+    '',
+    '🦋 *When I fell for you & felt butterflies:*',
+    exactMoment.trim() ? `"${exactMoment.trim()}"` : '_(I answered this in your letter)_',
+    '',
+    '📋 *My Answers to What Matters to You:*',
+  ];
+
+  MATTER_CARDS.forEach((card) => {
+    const ans = answers[card.id] || 'Yes ❤️';
+    lines.push(`• ${card.question} ➔ *${ans}*`);
+  });
+
+  lines.push('');
+  lines.push('✨ _Read with Rait Zara Si playing quietly in the background._');
+  lines.push('Signed,');
+  lines.push('Mr. Robot (Nachiket) 🦋');
+
+  const text = lines.join('\n');
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+};

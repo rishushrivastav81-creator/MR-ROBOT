@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Download, Copy, Check, X, ShieldCheck, Clock, Sparkles } from 'lucide-react';
+import { FileText, Download, Copy, Check, X, ShieldCheck, Clock, Sparkles, Send } from 'lucide-react';
 import { AnswersMap } from '../types';
 import { MATTER_CARDS } from '../data/storyData';
-import { generateLogText, downloadFile } from '../utils/confessionLogger';
+import { generateLogText, downloadFile, generateWhatsAppUrl } from '../utils/confessionLogger';
 import { DoodleHeart, DoodleButterfly } from './CuteDoodles';
 
 interface ConfessionLogModalProps {
@@ -262,12 +262,23 @@ export const ConfessionLogModal: React.FC<ConfessionLogModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              <a
+                href={generateWhatsAppUrl(answers, exactMoment)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-xs font-semibold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all"
+                title="Send confession directly to Ishu on WhatsApp"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">WhatsApp to Ishu</span>
+              </a>
+
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/10 border border-white/10 text-xs font-medium text-pink-200 hover:text-white transition-all"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? 'Copied Log!' : 'Copy Log'}
+                {copied ? 'Copied!' : 'Copy'}
               </button>
 
               <button
@@ -275,7 +286,7 @@ export const ConfessionLogModal: React.FC<ConfessionLogModalProps> = ({
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-pink-600 to-rose-700 hover:from-pink-500 hover:to-rose-600 border border-pink-400/40 text-xs font-semibold text-white shadow-[0_0_15px_rgba(244,63,94,0.3)] transition-all"
               >
                 <Download className="w-3.5 h-3.5" />
-                Download .TXT File
+                Download .TXT
               </button>
 
               <button

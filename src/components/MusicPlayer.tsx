@@ -1,51 +1,110 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Music, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, Music, Sparkles, Upload, FileAudio } from 'lucide-react';
+import { SongUploadModal } from './SongUploadModal';
+import { loadAudioBlob } from '../utils/audioStorage';
 
 export const MusicPlayer: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [showLyrics, setShowLyrics] = useState<boolean>(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
+  const [realAudioUrl, setRealAudioUrl] = useState<string | null>(null);
+  const [songTitle, setSongTitle] = useState<string>('Rait Zara Si');
+  const [isRealAudio, setIsRealAudio] = useState<boolean>(false);
+
+  // Audio elements & synthesis refs
+  const audioTagRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<number | null>(null);
   const isPlayingRef = useRef<boolean>(false);
 
-  // Rait Zara Si (Atrangi Re) key: D Major / B Minor
-  // Theme chords: Dmaj7 -> Gmaj7 -> Bm9 -> Aadd9
-  // Frequencies:
-  // D3=146.83, F#3=185.00, A3=220.00, C#4=277.18, E4=329.63, F#4=369.99, G4=392.00, A4=440.00, B4=493.88, C#5=554.37, D5=587.33
+  // Initial check for real audio sources on mount
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function checkForAudio() {
+      // 1. Check IndexedDB for user-uploaded MP3
+      try {
+        const stored = await loadAudioBlob();
+        if (stored && !isCancelled) {
+          const url = URL.createObjectURL(stored.blob);
+          setRealAudioUrl(url);
+          setSongTitle(stored.fileName.replace(/\.[^/.]+$/, ''));
+          setIsRealAudio(true);
+          return;
+        }
+      } catch {
+        // continue
+      }
+
+      // 2. Check localStorage for direct URL
+      const customUrl = localStorage.getItem('mr_robot_custom_audio_url');
+      if (customUrl && !isCancelled) {
+        setRealAudioUrl(customUrl);
+        setSongTitle('Rait Zara Si (Custom Audio)');
+        setIsRealAudio(true);
+        return;
+      }
+
+      // 3. Check if a default bundled file exists in /public (song.mp3 or rait_zara_si.mp3)
+      const possiblePaths = ['./song.mp3', './rait_zara_si.mp3', '/song.mp3'];
+      for (const p of possiblePaths) {
+        try {
+          const res = await fetch(p, { method: 'HEAD' });
+          if (res.ok && !isCancelled) {
+            setRealAudioUrl(p);
+            setSongTitle('Rait Zara Si (Original)');
+            setIsRealAudio(true);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    checkForAudio();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  // Rait Zara Si Synthesizer chord fallback if no real MP3 is available
   const raitZaraSiChords = [
     {
-      root: [146.83, 220.0, 277.18, 369.99], // Dmaj7: D3, A3, C#4, F#4
+      root: [146.83, 220.0, 277.18, 369.99],
       melody: [
-        { note: 587.33, time: 0.2, dur: 0.9 }, // D5 ("Rait...")
-        { note: 554.37, time: 1.1, dur: 0.7 }, // C#5
-        { note: 493.88, time: 1.8, dur: 0.9 }, // B4 ("...zara si")
-        { note: 440.0,  time: 2.7, dur: 1.2 }, // A4 ("...hai")
+        { note: 587.33, time: 0.2, dur: 0.9 },
+        { note: 554.37, time: 1.1, dur: 0.7 },
+        { note: 493.88, time: 1.8, dur: 0.9 },
+        { note: 440.0,  time: 2.7, dur: 1.2 },
       ],
     },
     {
-      root: [196.0, 246.94, 293.66, 369.99], // Gmaj7: G3, B3, D4, F#4
+      root: [196.0, 246.94, 293.66, 369.99],
       melody: [
-        { note: 369.99, time: 0.3, dur: 0.8 }, // F#4
-        { note: 392.0,  time: 1.1, dur: 0.8 }, // G4
-        { note: 440.0,  time: 1.9, dur: 0.9 }, // A4
-        { note: 493.88, time: 2.8, dur: 1.3 }, // B4
+        { note: 369.99, time: 0.3, dur: 0.8 },
+        { note: 392.0,  time: 1.1, dur: 0.8 },
+        { note: 440.0,  time: 1.9, dur: 0.9 },
+        { note: 493.88, time: 2.8, dur: 1.3 },
       ],
     },
     {
-      root: [123.47, 185.0, 220.0, 293.66], // Bm7: B2, F#3, A3, D4
+      root: [123.47, 185.0, 220.0, 293.66],
       melody: [
-        { note: 587.33, time: 0.2, dur: 0.8 }, // D5
-        { note: 659.25, time: 1.0, dur: 0.8 }, // E5
-        { note: 739.99, time: 1.8, dur: 1.1 }, // F#5
-        { note: 659.25, time: 2.9, dur: 1.1 }, // E5
+        { note: 587.33, time: 0.2, dur: 0.8 },
+        { note: 659.25, time: 1.0, dur: 0.8 },
+        { note: 739.99, time: 1.8, dur: 1.1 },
+        { note: 659.25, time: 2.9, dur: 1.1 },
       ],
     },
     {
-      root: [110.0, 164.81, 220.0, 277.18], // A major: A2, E3, A3, C#4
+      root: [110.0, 164.81, 220.0, 277.18],
       melody: [
-        { note: 587.33, time: 0.2, dur: 0.7 }, // D5
-        { note: 554.37, time: 0.9, dur: 0.9 }, // C#5
-        { note: 493.88, time: 1.8, dur: 0.9 }, // B4
-        { note: 440.0,  time: 2.7, dur: 1.4 }, // A4 (resolves)
+        { note: 587.33, time: 0.2, dur: 0.7 },
+        { note: 554.37, time: 0.9, dur: 0.9 },
+        { note: 493.88, time: 1.8, dur: 0.9 },
+        { note: 440.0,  time: 2.7, dur: 1.4 },
       ],
     },
   ];
@@ -56,11 +115,9 @@ export const MusicPlayer: React.FC = () => {
     const oscHarmonic = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // Warm Rhodes / soft piano timbre
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
 
-    // Warm overtone
     oscHarmonic.type = 'triangle';
     oscHarmonic.frequency.setValueAtTime(freq * 2, ctx.currentTime + delay);
 
@@ -89,15 +146,13 @@ export const MusicPlayer: React.FC = () => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // Gentle breathy woodwind / flute lead
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
 
-    // Subtle vibrato
     const vibrato = ctx.createOscillator();
     const vibratoGain = ctx.createGain();
-    vibrato.frequency.value = 4.8; // 4.8 Hz gentle vibrato
-    vibratoGain.gain.value = 2.5; // slight pitch depth
+    vibrato.frequency.value = 4.8;
+    vibratoGain.gain.value = 2.5;
     vibrato.connect(osc.frequency);
     vibrato.start(ctx.currentTime + delay);
 
@@ -120,6 +175,18 @@ export const MusicPlayer: React.FC = () => {
   };
 
   const startMusicLoop = () => {
+    // If we have a real audio URL, play using HTML5 Audio
+    if (realAudioUrl && audioTagRef.current) {
+      audioTagRef.current.play().then(() => {
+        setIsPlaying(true);
+        isPlayingRef.current = true;
+      }).catch((e) => {
+        console.warn('Real audio playback blocked by browser policy:', e);
+      });
+      return;
+    }
+
+    // Fallback: Web Audio synthesis loop
     try {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new AudioCtx();
@@ -131,18 +198,16 @@ export const MusicPlayer: React.FC = () => {
       setIsPlaying(true);
 
       let step = 0;
-      const stepDuration = 4200; // 4.2s per bar
+      const stepDuration = 4200;
 
       const loop = () => {
         if (!isPlayingRef.current || !audioCtxRef.current || audioCtxRef.current.state === 'closed') return;
         const currentBar = raitZaraSiChords[step % raitZaraSiChords.length];
 
-        // Play chord arpeggio
         currentBar.root.forEach((freq, idx) => {
           playPianoNote(ctx, freq, idx * 0.16, 3.8, 0.032);
         });
 
-        // Play Rait Zara Si melody line
         currentBar.melody.forEach((m) => {
           playFluteLead(ctx, m.note, m.time, m.dur);
         });
@@ -153,12 +218,15 @@ export const MusicPlayer: React.FC = () => {
 
       loop();
     } catch {
-      // Audio context might be restricted before interaction
+      // Audio context error
     }
   };
 
   const stopMusic = () => {
     isPlayingRef.current = false;
+    if (audioTagRef.current) {
+      audioTagRef.current.pause();
+    }
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -178,26 +246,60 @@ export const MusicPlayer: React.FC = () => {
     }
   };
 
+  // Callback when user uploads or updates audio file in modal
+  const handleAudioUpdated = (newUrl: string | null, newTitle: string) => {
+    stopMusic();
+    if (newUrl) {
+      setRealAudioUrl(newUrl);
+      setIsRealAudio(true);
+      setSongTitle(newTitle);
+      // Auto-start playing the new song
+      setTimeout(() => {
+        if (audioTagRef.current) {
+          audioTagRef.current.src = newUrl;
+          audioTagRef.current.play().then(() => {
+            setIsPlaying(true);
+            isPlayingRef.current = true;
+          }).catch(() => {});
+        }
+      }, 200);
+    } else {
+      setRealAudioUrl(null);
+      setIsRealAudio(false);
+      setSongTitle('Rait Zara Si');
+    }
+  };
+
   useEffect(() => {
     return () => {
       stopMusic();
     };
   }, []);
 
-  const [showLyrics, setShowLyrics] = useState<boolean>(false);
-
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      {/* Hidden real HTML5 audio element for actual audio files */}
+      {realAudioUrl && (
+        <audio
+          ref={audioTagRef}
+          src={realAudioUrl}
+          loop
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        />
+      )}
+
+      {/* Main Play / Pause Button */}
       <button
         id="ambient-music-toggle"
         onClick={toggleSound}
-        className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-300 backdrop-blur-md border ${
+        className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-300 backdrop-blur-md border cursor-pointer ${
           isPlaying
             ? 'bg-rose-950/70 border-rose-500/50 text-rose-100 shadow-[0_0_20px_rgba(225,29,72,0.35)]'
             : 'bg-white/[0.04] border-white/10 text-rose-200/70 hover:text-white hover:border-white/20'
         }`}
-        title={isPlaying ? 'Pause Rait Zara Si melody' : 'Play Rait Zara Si instrumental theme'}
-        aria-label="Toggle Rait Zara Si melody"
+        title={isPlaying ? `Pause ${songTitle}` : `Play ${songTitle}`}
+        aria-label="Toggle song playback"
       >
         {isPlaying ? (
           <>
@@ -206,26 +308,44 @@ export const MusicPlayer: React.FC = () => {
               <span className="w-0.5 h-2 bg-pink-300 animate-pulse rounded-full" style={{ animationDelay: '0.2s' }} />
               <span className="w-0.5 h-3.5 bg-pink-500 animate-pulse rounded-full" style={{ animationDelay: '0.4s' }} />
             </div>
-            <span className="font-serif italic text-xs tracking-wider text-pink-100">
-              Rait Zara Si 🎵
+            <span className="font-serif italic text-xs tracking-wider text-pink-100 truncate max-w-[110px] sm:max-w-[150px]">
+              {songTitle} 🎵
             </span>
-            <Volume2 className="w-3.5 h-3.5 text-pink-400" />
+            <Volume2 className="w-3.5 h-3.5 text-pink-400 shrink-0" />
           </>
         ) : (
           <>
-            <Music className="w-3.5 h-3.5 text-pink-300/60" />
-            <span className="font-serif italic text-xs tracking-wider">
-              Play "Rait Zara Si"
+            <Music className="w-3.5 h-3.5 text-pink-300/60 shrink-0" />
+            <span className="font-serif italic text-xs tracking-wider truncate max-w-[110px] sm:max-w-[150px]">
+              Play "{songTitle}"
             </span>
-            <VolumeX className="w-3.5 h-3.5 opacity-50" />
+            <VolumeX className="w-3.5 h-3.5 opacity-50 shrink-0" />
           </>
         )}
+      </button>
+
+      {/* Upload / Change Song Button */}
+      <button
+        id="upload-song-btn"
+        onClick={() => setIsUploadModalOpen(true)}
+        className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-full border text-[11px] font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+          isRealAudio
+            ? 'bg-pink-950/40 border-pink-500/30 text-pink-300 hover:text-white hover:bg-pink-900/40'
+            : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10 text-pink-200/60 hover:text-pink-100'
+        }`}
+        title="Upload Real MP3 Song File or change music"
+        aria-label="Upload custom song"
+      >
+        <Upload className="w-3 h-3 text-pink-400" />
+        <span className="hidden sm:inline">
+          {isRealAudio ? 'Change Song' : 'Upload Real Song'}
+        </span>
       </button>
 
       {/* Lyrics button */}
       <button
         onClick={() => setShowLyrics(!showLyrics)}
-        className="p-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-pink-200/60 hover:text-pink-100 transition-colors text-[11px]"
+        className="p-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-pink-200/60 hover:text-pink-100 transition-colors text-[11px] cursor-pointer"
         title="View lyrics of Rait Zara Si"
         aria-label="View song lyrics"
       >
@@ -241,7 +361,7 @@ export const MusicPlayer: React.FC = () => {
             </span>
             <button
               onClick={() => setShowLyrics(false)}
-              className="text-pink-300/50 hover:text-pink-100 text-xs px-1"
+              className="text-pink-300/50 hover:text-pink-100 text-xs px-1 cursor-pointer"
             >
               ✕
             </button>
@@ -259,6 +379,15 @@ export const MusicPlayer: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Upload Real Song Modal */}
+      <SongUploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        currentSongTitle={songTitle}
+        isRealAudio={isRealAudio}
+        onAudioUpdated={handleAudioUpdated}
+      />
     </div>
   );
 };

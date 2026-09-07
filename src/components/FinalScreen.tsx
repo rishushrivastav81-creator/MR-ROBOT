@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { RotateCcw, ChevronDown, ChevronUp, Lock, Sparkles, Heart, FileText, Download, Copy, Check } from 'lucide-react';
+import { RotateCcw, ChevronDown, ChevronUp, Lock, Sparkles, Heart, FileText, Download, Copy, Check, QrCode, Share2, Send } from 'lucide-react';
 import { MATTER_CARDS } from '../data/storyData';
 import { AnswersMap } from '../types';
 import { DoodleHeart, DoodleButterfly, DoodleStar } from './CuteDoodles';
-import { generateLogText, downloadFile } from '../utils/confessionLogger';
+import { generateLogText, downloadFile, generateWhatsAppUrl } from '../utils/confessionLogger';
 
 interface FinalScreenProps {
   onRestart: () => void;
   answers: AnswersMap;
   savedMoment?: string;
   onOpenLogModal?: () => void;
+  onOpenShareModal?: () => void;
 }
 
 export const FinalScreen: React.FC<FinalScreenProps> = ({
@@ -18,6 +19,7 @@ export const FinalScreen: React.FC<FinalScreenProps> = ({
   answers,
   savedMoment,
   onOpenLogModal,
+  onOpenShareModal,
 }) => {
   const [showSummary, setShowSummary] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
@@ -160,7 +162,39 @@ With you.`}
             <span>{copied ? 'Copied!' : 'Copy'}</span>
           </button>
         </div>
+
+        {/* WhatsApp 1-Click Send to Ishu */}
+        <a
+          href={generateWhatsAppUrl(answers, savedMoment || '')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold tracking-wide transition-all shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+        >
+          <Send className="w-3.5 h-3.5" />
+          <span>Send My Confession Directly to Ishu on WhatsApp 💌</span>
+        </a>
       </div>
+
+      {/* Share Link & QR Code Action Card */}
+      {onOpenShareModal && (
+        <div className="my-4 p-4 rounded-3xl bg-gradient-to-r from-pink-950/30 via-black/40 to-pink-950/30 border border-pink-500/20 text-center flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-mono text-pink-300 font-medium">
+            <QrCode className="w-4 h-4 text-pink-400" />
+            <span>Share this letter with Mr. Robot</span>
+          </div>
+          <p className="text-[11.5px] text-pink-200/70 font-serif italic max-w-xs">
+            Send him the live link or generate a romantic QR code card he can scan directly with his phone!
+          </p>
+          <button
+            id="final-open-share-qr-btn"
+            onClick={onOpenShareModal}
+            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-pink-600 via-rose-600 to-pink-700 hover:from-pink-500 hover:to-rose-500 text-white text-xs font-semibold tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(244,63,94,0.3)] min-h-[42px]"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Get Share Link & QR Code</span>
+          </button>
+        </div>
+      )}
 
       {/* Safe Answers Privacy Note */}
       <div className="pt-6 mt-6 border-t border-white/[0.08] flex flex-col items-center gap-4">
