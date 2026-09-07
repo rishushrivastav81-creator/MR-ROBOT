@@ -5,6 +5,7 @@ Built with Python, Streamlit, and Custom CSS. Ready for Streamlit Community Clou
 """
 
 import json
+import html
 import os
 import uuid
 import urllib.parse
@@ -43,11 +44,6 @@ if "exact_moment" not in st.session_state:
     st.session_state.exact_moment = ""
 if "is_admin" not in st.session_state:
     st.session_state.is_admin = False
-
-# Check query parameters for secret admin mode (e.g. ?view=ishu or ?admin=ishu)
-query_params = st.query_params
-if query_params.get("view") == "ishu" or query_params.get("admin") == "ishu":
-    st.session_state.is_admin = True
 
 # -----------------------------------------------------------------------------
 # DATA: 11 THINGS THAT MATTER TO ME (SCREEN 9)
@@ -594,12 +590,13 @@ def show_ishu_reading_room():
             with st.expander(session_title, expanded=(idx == 0)):
                 # Butterfly Moment Callout
                 moment = resp.get("exact_moment", "").strip()
+                safe_moment = html.escape(moment)
                 st.markdown("### 🦋 His Exact Butterfly Moment:")
                 if moment:
                     st.markdown(
                         f"""
                         <div style="padding: 1.25rem; background: rgba(244, 63, 94, 0.1); border-left: 3px solid #f43f5e; border-radius: 12px; margin-bottom: 1rem; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.2rem; color: #fff1f5;">
-                            "{moment}"
+                            "{safe_moment}"
                         </div>
                         """,
                         unsafe_allow_html=True,
@@ -613,12 +610,13 @@ def show_ishu_reading_room():
                 for q_key, a_val in answers.items():
                     col_q, col_a = st.columns([3, 1])
                     with col_q:
-                        st.markdown(f"**{q_key}**")
+                        st.markdown(f"**{html.escape(str(q_key))}**")
                     with col_a:
-                        if "Yes" in a_val:
-                            st.markdown(f"<span style='color: #4ade80; font-weight: bold;'>{a_val}</span>", unsafe_allow_html=True)
+                        safe_answer = html.escape(str(a_val))
+                        if "Yes" in str(a_val):
+                            st.markdown(f"<span style='color: #4ade80; font-weight: bold;'>{safe_answer}</span>", unsafe_allow_html=True)
                         else:
-                            st.markdown(f"<span style='color: #fde047; font-weight: bold;'>{a_val}</span>", unsafe_allow_html=True)
+                            st.markdown(f"<span style='color: #fde047; font-weight: bold;'>{safe_answer}</span>", unsafe_allow_html=True)
 
                 st.markdown("---")
                 st.download_button(
