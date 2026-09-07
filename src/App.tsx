@@ -15,6 +15,7 @@ import { StreamlitCodeModal } from './components/StreamlitCodeModal';
 import { APP_PY_CONTENT, REQUIREMENTS_CONTENT, README_CONTENT } from './data/sourceFiles';
 import { Heart, FileText, QrCode } from 'lucide-react';
 import { saveConfessionLog, loadConfessionLog } from './utils/confessionLogger';
+import { submitRemoteMoment, submitRemoteResponse } from './utils/remoteResponses';
 
 export default function App() {
   const [screen, setScreen] = useState<ScreenType>('screen_1');
@@ -48,6 +49,7 @@ export default function App() {
     const updatedAnswers = { ...answers, [currentCard.id]: choice };
     setAnswers(updatedAnswers);
     saveConfessionLog(updatedAnswers, savedMoment);
+    void submitRemoteResponse(updatedAnswers, savedMoment, currentCard.id, choice);
 
     if (cardIndex + 1 < MATTER_CARDS.length) {
       setCardIndex((prev) => prev + 1);
@@ -311,10 +313,12 @@ export default function App() {
               onSaveMoment={(moment) => {
                 setSavedMoment(moment);
                 saveConfessionLog(answers, moment);
+                void submitRemoteMoment(answers, moment);
               }}
               onSubmit={(moment) => {
                 setSavedMoment(moment);
                 saveConfessionLog(answers, moment);
+                void submitRemoteMoment(answers, moment);
               }}
               onNext={() => {
                 goToScreen('screen_final');

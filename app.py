@@ -482,9 +482,9 @@ def render_header():
         unsafe_allow_html=True,
     )
 
-    # Check for real song on disk (song.mp3, rait_zara_si.mp3, public/song.mp3)
+    # Check for the bundled real song before optional uploaded alternatives.
     real_song_path = None
-    for p in ["song.mp3", "rait_zara_si.mp3", "public/song.mp3"]:
+    for p in ["public/assets/rait-zara-si.mp3", "song.mp3", "rait_zara_si.mp3", "public/song.mp3"]:
         if os.path.exists(p) and os.path.getsize(p) > 1000:
             real_song_path = p
             break

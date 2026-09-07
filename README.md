@@ -37,6 +37,17 @@ Designed as a modern, mobile-first, dark luxury interactive web application buil
   - Downloadable `.txt` log file and formatted copyable clipboard text.
 - **100% Client-Side & Fast**: Zero Python dependencies or server sleep timers. Loads instantly on any smartphone browser.
 
+## 👨‍💻 Developer Answer Log (React app)
+
+The React/Vite app keeps a local copy for the visitor and can also send each answer to Supabase so the developer can inspect responses from all visitors.
+
+1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor.
+2. Copy the Supabase values from `.env.example` into your React deployment as `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. For Streamlit, configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` as app secrets.
+3. Deploy the React app with those two environment variables configured.
+4. In Supabase, open **Table Editor > response_events** while signed in. Each answer appears as a new row, including the visitor's current answer map and exact moment.
+
+Only signed-in Supabase users can read the table. Anonymous visitors can submit responses but cannot query other visitors' answers.
+
 ---
 
 ## 🎵 How to Add the Real Song ("Rait Zara Si" MP3)

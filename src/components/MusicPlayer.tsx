@@ -46,7 +46,7 @@ export const MusicPlayer: React.FC = () => {
       }
 
       // 3. Check if a default bundled file exists in /public (song.mp3 or rait_zara_si.mp3)
-      const possiblePaths = ['./song.mp3', './rait_zara_si.mp3', '/song.mp3'];
+      const possiblePaths = ['/assets/rait-zara-si.mp3', './song.mp3', './rait_zara_si.mp3', '/song.mp3'];
       for (const p of possiblePaths) {
         try {
           const res = await fetch(p, { method: 'HEAD' });
